@@ -1,1 +1,1 @@
-# Data-Science-Practice
+# Data-Science-Learnings
