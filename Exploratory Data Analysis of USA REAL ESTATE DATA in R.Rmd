@@ -1,0 +1,262 @@
+---
+title: "Simple Exploratory Data Analysis with R- USA Real Estate Data"
+
+
+output: html_notebook
+---
+```{r}
+install.packages("names", repos = "https://cloud.r-project.org")
+```
+
+
+#Explore the overall structure of the dataset using “str” and “summary” functions
+```{r}
+df=read.csv("C:/Users/CSC/Downloads/realtor-1.csv")
+str(df)
+summary(df)
+```
+Specification of the type of each variable as follows:
+
+• Specify whether the variable is categorical(qualitative) or numeric(continuous)?
+• For *qualitative* variables, specify whether it is *nominal* or *ordinal*.
+• For *numeric* variables, specify whether it is discrete or continuous?
+• For *discrete* numeric variables specify whether it has *interval* *scale* (i.e., the difference between
+two values is meaningful) or not?
+```{r}
+cat("#categorical nominal variable #chr  
+ # bed           : numerical  discrete #3 4 2 4 6 4 3 3 2 5 ...
+ # bath          : numerical discrete #2 2 1 2 2 3 1 2 1 3 ...
+ # acre_lot      : numerical continous #0.12 0.08 0.15 0.1 0.05 0.46 0.2 0.08 0.09 7.46 ...
+ # city          : categorical nominal 
+ # state         : categorical nominal
+ # zip_code      : categorical  nominal #601 601 795 731 680 612 639 731 730 670 ...
+ # house_size    : numerical  discrete #920 1527 748 1800 NA ...
+ # prev_sold_date: categorical ordinal 
+ # price         : numerical, discrete  #105000 80000 67000 145000 65000 179000 50000 71600 100000 300000 ...")
+```
+
+#Are there any duplicate observations in the data? If so, remove them.
+```{r}
+# Check for duplicate observations
+has_duplicates <- duplicated(df)
+
+
+
+# Remove duplicate observations
+unique_df <- df[!has_duplicates, ]
+
+# Print the dimensions of the dataset before and after removing duplicates
+cat("Original dataset dimensions:", dim(df), "\n")
+cat("Dataset dimensions after removing duplicates:", dim(unique_df), "\n")
+
+```
+#Does any of the variables have missing values? Which ones?
+```{r}
+# Check for missing values in each column in original dataset
+
+
+missing_values_df <- colSums(is.na(df))
+cat("Columns with missing values in  original dataset:", missing_values_df, "\n")
+
+
+# Print columns with missing values
+columns_with_missing <- names(missing_values_df[missing_values_df > 0])
+cat("Columns with missing values:", columns_with_missing, "\n")
+
+# Print the number of missing values for each column
+cat("Number of missing values for each column:\n")
+print(missing_values_df[missing_values_df > 0])
+
+missing_val_uniqdf <- colSums(is.na(unique_df))
+cat("Columns with missing values in distinct dataset:", missing_val_uniqdf, "\n")
+
+# Print columns with missing values
+uniqdf_missing_cols <- names(missing_values_df[missing_val_uniqdf > 0])
+cat("Columns with missing values:", uniqdf_missing_cols, "\n")
+
+
+
+```
+```{r}
+cat("There are  6 columns with missing values namely
+bed
+bath
+acre_lot
+zip_code
+house_size price")
+```
+
+Remove all houses with price less than or equal to 50K
+```{r}
+# Create a new dataset without houses with price <= 50K
+no50kp_uniqdf <- unique_df[unique_df$price > 50000, ]
+
+# Print dimensions of the dataset before and after removing houses
+cat("Original dataset dimensions:", dim(unique_df), "\n")
+cat("Dataset dimensions after removing houses with price <= 50K:", dim(no50kp_uniqdf), "\n")
+
+```
+The price variable appears to have some extreme values. Removing the outliers in the “price” variable using the IQR method. IQR and quantile functions throw error if  NAs are in  variable. Use na.rm=TRUE option inside IQR and quantile methods to ignore the missing price values.
+```{r}
+# Calculate the lower and upper bounds for outliers using the IQR method
+lower_bound_val <- quantile(no50kp_uniqdf$price, 0.25, na.rm = TRUE) - 1.5 * IQR(no50kp_uniqdf$price, na.rm = TRUE)
+upper_bound_val <- quantile(no50kp_uniqdf$price, 0.75, na.rm = TRUE) + 1.5 * IQR(no50kp_uniqdf$price, na.rm = TRUE)
+
+# Remove outliers from the dataset
+outliers_removed_df <- no50kp_uniqdf[no50kp_uniqdf$price >= lower_bound_val & no50kp_uniqdf$price <= upper_bound_val, ]
+
+# Print dimensions of the dataset before and after removing outliers
+cat("Original dataset dimensions:", dim(no50kp_uniqdf), "\n")
+cat("Dataset dimensions after removing outliers:", dim(outliers_removed_df), "\n")
+
+
+```
+A histogram and boxplot of the price. What can you say about the shape of price variable? Is the price variable positively skewed, symmetric, or negatively skewed
+```{r}
+#install.packages("ggplot2")
+# Load necessary libraries
+library(ggplot2)
+
+# Draw a histogram
+ggplot(outliers_removed_df, aes(x = price)) +
+geom_histogram(binwidth = 5000, fill = "skyblue", color = "black", aes(y = ..density..), alpha = 0.7) +
+geom_density(color = "red") +
+labs(title = "Histogram of Price", x = "Price", y = "Density")
+
+
+```
+
+```{r}
+# Draw a boxplot
+ggplot(outliers_removed_df, aes(x = 1, y = price)) +
+geom_boxplot(fill = "lightgreen", color = "black") +
+labs(title = "Boxplot of Price", x = "", y = "Price")
+
+
+```
+```{r}
+# calculate skewness in r
+install.packages("moments")
+library(moments)
+
+# Calculate skewness
+skewness_val <- skewness(outliers_removed_df$price, na.rm = TRUE)
+cat("Skewness of Price variable:", skewness_val, "\n")
+```
+```{r}
+cat("As the skewness value is  positive, the distribution is positively skewed.")
+```
+ what percentage of the observations are missing for the price variable?
+```{r}
+# Calculate the percentage of missing values for the 'price' variable
+missing_percentage_uniqdfprice <- sum(is.na(unique_df$price)) / length(unique_df$price) * 100
+
+# Print the result
+cat("Percentage of missing observations for the 'price' variable of distinct dataset:", missing_percentage_uniqdfprice, "%\n")
+# Calculate the percentage of missing values for the 'price' variable
+missing_percentage_dfprice <- sum(is.na(df$price)) / length(df$price) * 100
+
+# Print the result
+cat("Percentage of missing observations for the 'price' variable of original dataset:", missing_percentage_dfprice, "%\n")
+```
+```{r}
+# Calculate the percentage of missing values for the 'price' variable
+missing_percentage_outrmdfprice <- sum(is.na(outliers_removed_df$price)) / length(outliers_removed_df$price) * 100
+
+# Print the result
+cat("Percentage of missing observations for the 'price' variable fromoutliers removed dataframe:", missing_percentage_outrmdfprice, "%\n")
+```
+Use as.Date method to convert the sold_date variable from character string to date/time type. Then from this date/time object create two new attributes (sold_year) and (sold_month) to store the year and month that the house was sold (see an example here: https://statisticsglobe.com/extract-month-from-date- in-r )
+```{r}
+# Convert 'sold_date' to date/time type
+outliers_removed_df$sold_date <- as.Date(outliers_removed_df$sold_date, format = "%Y-%m-%d")
+
+# Create new attributes 'sold_year' and 'sold_month'
+outliers_removed_df$sold_year <- format(outliers_removed_df$sold_date, "%Y")
+outliers_removed_df$sold_month <- format(outliers_removed_df$sold_date, "%m")
+
+# Printing the first few rows to check the result
+head(outliers_removed_df)
+
+```
+conversion of the “state” attribute to factor then take a summary to see how many observations are there for each state. Removing states with only one observation from the #data
+```{r}
+# Convert 'state' to factor
+outliers_removed_df$state <- as.factor(outliers_removed_df$state)
+
+# Take a summary to see the count of observations for each state
+summary_state <- table(outliers_removed_df$state)
+print(summary_state)
+
+# Remove states with only one observation
+states_to_remove <- names(summary_state[summary_state == 1])
+after_fewstates_removed <- outliers_removed_df[!(outliers_removed_df$state %in% states_to_remove), ]
+
+# Print the dimensions of the dataset before and after removing states
+cat("Original dataset dimensions:", dim(df), "\n")
+cat("Outliers removed dataset dimensions:", dim(outliers_removed_df), "\n")
+cat("Dataset dimensions after removing states with only one observation:", dim(after_fewstates_removed), "\n")
+```
+ Is there a statistically significant difference between the average house price for different states? Use appropriate plot and statistic test to answer this question.
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(tidyr)
+
+# Create a boxplot
+ggplot(after_fewstates_removed, aes(x = state, y = price)) +
+geom_boxplot(fill = "skyblue", color = "black") +
+labs(title = "Boxplot of House Prices by State", x = "State", y = "Price")
+
+
+
+```
+```{r}
+# Run ANOVA test
+anova_result <- aov(price ~ state, data = after_fewstates_removed)
+print(summary(anova_result))
+
+
+```
+```{r}
+print("Based on the side by side box plot and the p-value of anova between price and state, it can concluded that there is a statistically significant price variation between different states.")
+```
+
+# Reference taken from google
+```{r}
+# Post-hoc pairwise comparison (Tukey's test)
+print(TukeyHSD(anova_result))
+
+
+
+
+```
+
+
+What is the correlation between house_price and the variables sold_year, house_size, bed, and bath? Note: The “cor” function returns error when NAs are present in the variables. Set use="pairwise.complete.obs" inside the “cor” function to ignore NAs when computing correlation coefficient between a pair of variables.
+```{r}
+str(outliers_removed_df)
+```
+```{r}
+str(after_fewstates_removed)
+```
+```{r}
+# Calculate correlation coefficients
+correlation_matrix <- cor(outliers_removed_df[c("price",  "house_size", "bed", "bath")], use = "pairwise.complete.obs")
+
+# Print the correlation matrix
+print(correlation_matrix)
+
+```
+```{r}
+outliers_removed_df$sold_year <- as.numeric(outliers_removed_df$sold_year)
+
+
+cor_price_soldyear <- cor(outliers_removed_df$sold_year, outliers_removed_df$price, use = "complete.obs")
+
+# Print the correlation
+print(cor_price_soldyear)
+
+```
+
+
