@@ -1,0 +1,643 @@
+---
+title: "Exploratory Data Analysis  Of Heart Disease In Cleveland Using R"
+output: html_notebook
+---
+
+
+#Opening the files and examine the data in them. 
+Note that the files do not have a header and the
+missing values are marked by “?” character. Each file contains the 14 attributes described here. Load each
+file to a dataframe ( remember to set na.string=”?” so that “?” is recognized as missing not a data value).
+
+```{r}
+#Loading processed.cleveland.data
+
+# Use read.table to load the data
+df_cleveland <- read.table("C:/Users/CSC/Downloads/heart+disease/processed.cleveland.data",header = FALSE, na.strings = "?", sep=",")
+
+# Print the first few rows of the loaded data
+
+head(df_cleveland)
+
+```
+```{r}
+#Loading processed.hungarian.data
+
+# Use read.table to load the data
+df_hungarian <- read.table("C:/Users/CSC/Downloads/heart+disease/processed.hungarian.data", header = FALSE, na.strings = "?",sep=",")
+
+# Print the first few rows of the loaded data
+head(df_hungarian)
+```
+```{r}
+#Loading processed.switzerland.data
+
+# Use read.table to load the data
+df_switzerland <- read.table("C:/Users/CSC/Downloads/heart+disease/processed.switzerland.data", header = FALSE, na.strings = "?",sep=",")
+
+# Print the first few rows of the loaded data
+head(df_switzerland)
+```
+```{r}
+#loading processed.va.data
+
+# Use read.table to load the data
+df_va <- read.table("C:/Users/CSC/Downloads/heart+disease/processed.va.data", header = FALSE, na.strings = "?",sep=",")
+
+# Print the first few rows of the loaded data
+head(df_va)
+
+```
+
+#Using rbind function to combine the four dataframes into one dataframe and manually set the
+#column names using colnames function. The name of each column/attribute is described here.
+```{r}
+install.packages("dplyr")
+library(dplyr)
+
+# rbind function to combine the four dataframes into one dataframe
+hdisease_df <- rbind(df_cleveland, df_hungarian, df_switzerland, df_va)
+
+# set the
+#column names using colnames function
+colnames(hdisease_df) <- c("age", "sex", "cp", "trestbps", "chol", "fbs", "restecg","thalach", "exang","oldpeak", "slope", "ca", "thal", "num" )
+
+# Print the first few rows of the final dataframe
+head(hdisease_df)
+#"age", "sex", "cp", "trestbps", "chol", "fbs", "restecg", "thalach", "exang", "oldpeak", "slope", "ca","thal", "num"
+```
+
+#Reference- "how to bolden the text in R"
+ Exploration of the overall structure of the dataset. What percentage of rows have missing values in one
+or more attributes?
+
+```{r}
+
+
+# Checking the structure 
+str(hdisease_df)
+
+# Calculating the total number of rows with missing values in one or more attributes
+total_nrows <- nrow(hdisease_df)
+missing_value_rows <- sum(rowSums(is.na(hdisease_df)) > 0)
+
+#  the percentage of rows with missing values
+missing_rows_percentage <- (missing_value_rows / total_nrows) * 100
+
+#  the percentage of rows with missing values
+cat("\033[1mPercentage of rows with missing values:", missing_rows_percentage, "%\n")
+#age , sex , cp , trestbps , chol , fbs , restecg , thalach , exang , oldpeak , slope , ca , thal , num
+
+```
+# Specification of the type of each variable as follows:
+•  whether the variable is categorical(qualitative) or numeric(continuous)?
+• For qualitative variables, specify whether it is nominal or ordinal.
+• For numeric variables, specify whether it is discrete or continuous?
+• For discrete numeric variables specify whether it has interval scale (i.e., the difference between
+two values is meaningful) or not?
+```{r}
+#$ age     : num  63 67 67 37 41 56 62 57 63 53 ...
+#print(typeof(age))
+#print(class(age))
+cat("\033[1mAge\033[0m is a \033[1mnumerical - discrete, interval-scaled variable. \n")
+ #$ sex     : num  1 1 1 1 0 1 0 0 1 1 ...
+#print(typeof(sex))
+#print(class(sex))
+cat("\033[1msex\033[0m is \033[1mcategorical,  nominal variable")
+#$ cp      : num  1 4 4 3 2 2 4 4 4 4 ...
+#print(typeof(cp))
+#print(class(cp))
+cat("\033[1mcp\033[0m is  \033[1mcategorical variable. \n")
+ #$ trestbps: num  145 160 120 130 130 120 140 120 130 140 ...
+#print(typeof(trestbps))
+#print(class(trestbps))
+cat("\033[1mtrestbps\033[0m is \033[1mdiscrete, interval-scaled variable\033[0m as it represents the resting blood pressure of the individual on admission to the hospital.. \n")
+ #$ chol    : num  233 286 229 250 204 236 268 354 254 203 ...
+print(typeof(chol))
+print(class(chol))
+cat("\033[1mchol\033[0m is \033[1m discrete interval-scaled variable\033[0m as it represents the serum cholestoral level of the individual.. \n")
+ #$ fbs     : num  1 0 0 0 0 0 0 0 0 1 ...
+#print(typeof(fbs))
+#print(class(fbs))
+cat("\033[1mfbs\033[0m is \033[1mcategorical variable\033[0m as it represents whether the fasting blood sugar level is greater than 120 mg/dl. \n")
+ #$ restecg : num  2 2 2 0 2 0 2 0 2 2 ...
+#print(typeof(restecg))
+#print(class(restecg))
+cat("\033[1mrestecg\033[0m is \033[1mcategorical variable. \n")
+ #$ thalach : num  150 108 129 187 172 178 160 163 147 155 ...
+#print(typeof(thalach))
+#print(class(thalach))
+cat("\033[1mthalach\033[0m is \033[1mdiscrete interval-saled variable\033[0m as it epresents the maximum heart rate achieved by the individual. \n")
+ #$ exang   : num  0 1 1 0 0 0 0 1 0 1 ...
+#print(typeof(exang))
+#print(class(exang))
+cat("\033[1mexang\033[0m is  \033[1mcategorical nominal variable\033[0m asit reprents  whether exercise induced angina is present or not. \n")
+ #$ oldpeak : num  2.3 1.5 2.6 3.5 1.4 0.8 3.6 0.6 1.4 3.1 ...
+#print(typeof(oldpeak))
+#print(class(oldpeak))
+cat("old peak is continous")
+ #$ slope   : num  3 2 2 3 1 1 3 1 2 3 ...
+#print(typeof(slope))
+#print(class(slope))
+cat("\033[1mslope\033[0m is \033[1mcategorical ordinal variable\033[0m which indicates levels-1,2,3 with regards to the heart disease.Here downsloping<flat< upsloping \n")
+ #$ ca      : num  0 3 2 0 0 0 2 0 1 0 ...
+#print(typeof(ca))
+#print(class(ca))
+cat("\033[1mca\033[0m is \033[1mdiscrete ordinal variable\033[0m as the values indicate hierarchical order of levels whch indicate the severity of condition. \n")
+ #$ thal    : num  6 3 7 3 3 3 3 3 7 7 ...
+#print(typeof(thal))
+#print(class(thal))
+cat("\033[1mthal\033[0m  is \033[1mcategorical nominal variable\n")
+ #$ num     : int  0 2 1 0 0 0 3 0 2 1 ...
+#print(typeof(num))
+#print(class(num))
+cat("\033[1mnum\033[0m seems like \033[1mdiscrete variable\033[0m due to unclear description at first sight but it's ordered - 0,1,2. hnce it's a categorical ordinal variable. \n")
+```
+
+
+
+
+```{r}
+cat("From the  data observations of slope can be inferred as discrete ordinal variable as it has 1, 2,3 which are dicrete and oredered with another but not interval-scaled.")
+```
+
+```{r}
+unique(hdisease_df$ca)
+```
+
+```{r}
+cat("ca is discrete ordinal variable as the values indicate hierarchical order of levels whch indicate the severity of condition. \n")
+```
+
+
+```{r}
+
+unique(hdisease_df$thal)
+```
+
+```{r}
+cat("The variable thalach is a categorical nominal variable as the values(1,3,6,7) represent the types of heart diseases and the heart rate in which type does it fall.")
+```
+
+
+#Conversion of all categorical variables to “factor” using factor function ( set the “labels” option to give meaningful names/labels to each level)
+```{r}
+
+hdisease_df$sex <- factor(hdisease_df$sex, levels = c(0, 1), labels = c("Female", "Male"))
+
+
+hdisease_df$fbs <- factor(hdisease_df$fbs, levels = c(0, 1), labels = c("Less than or equal to 120 mg/dl", "Greater than 120 mg/dl"))
+
+
+hdisease_df$exang <- factor(hdisease_df$exang, levels = c(0, 1), labels = c("No", "Yes"))
+
+
+hdisease_df$restecg <- factor(hdisease_df$restecg, levels = c(0, 1, 2), labels = c("Normal", "ST-T wave abnormality", "Probable or definite left ventricular hypertrophy"))
+hdisease_df$cp <- factor(hdisease_df$cp, levels = c(1, 2, 3, 4), labels = c("Typical angina", "Atypical angina", "Non-anginal pain", "Asymptomatic"))
+hdisease_df$slope <- factor(hdisease_df$slope, levels = c(1, 2, 3), labels = c("Upsloping", "Flat", "Downsloping"))
+hdisease_df$thal <- factor(hdisease_df$thal, levels = c(3, 6, 7), labels = c("Normal", "Fixed defect", "Reversible defect"))
+hdisease_df$num <- factor(hdisease_df$num, levels = c(0, 1, 2, 3, 4), labels = c("No heart disease", "Possibly heart disease", "Probably heart disease", "Definitely heart disease", "Confirmed heart disease"))
+# Check the structure of the  dataframe
+str(hdisease_df)
+
+
+
+```
+
+
+
+#The median and mode of the age attribute.
+
+#referred R documentation for syntax
+```{r}
+install.packages("DescTools")
+library(DescTools)
+```
+
+```{r}
+
+
+#  the median of the age attribute
+median_of_age <- median(hdisease_df$age)
+
+
+#  the mode of the age attribute
+mode_of_age <- Mode(hdisease_df$age)
+
+# Print the median and mode of the age attribute
+print(paste("Median age:", median_of_age))
+print(paste("Mode of age:", mode_of_age))
+
+```
+
+#Using “ifelse” and “factor” functions to create a new factor variable (call it “diagnosis”) which
+takes the value “No” if column 14 has the value zero and “Yes” otherwise.
+#Replaced column 14 of dataframe with this new variable.
+```{r}
+cat("Before replacing column 14")
+head(hdisease_df)
+
+
+
+```
+```{r}
+# Creating a new factor variable 'diagnosis' based on column 14 "num"
+hdisease_df$diagnosis <- factor(ifelse(hdisease_df$num == 0, "No", "Yes"))
+
+# Replacing column 14 with the new variable 'diagnosis'
+hdisease_df[, 14] <- hdisease_df$diagnosis  
+cat('After replacing column 14 with diagnosis:')
+# Print the first few rows of the updated dataframe
+head(hdisease_df)
+```
+
+#Exploration of the relationship between “diagnosis” variable  created above and all other 13 attributes in the dataset.  
+#Interpretation of  each plot and test statistics.
+
+```{r}
+
+install.packages("ggplot2")
+# Load required libraries for statistical tests and plots
+library(ggplot2)
+install.packages("ggpubr")
+library(ggpubr)  # for side-by-side box plots
+install.packages("MASS")
+library(MASS)    # for the Kruskal-Wallis test
+
+
+ 
+
+```
+
+
+
+#Referred   R documentation for syntax
+```{r}
+chi_sq_result_sex <- chisq.test(table(hdisease_df$sex, hdisease_df$diagnosis))
+print(chi_sq_result_sex)  # Print the chi-square test result
+```
+```{r}
+
+
+mosaicplot(hdisease_df$sex ~ hdisease_df$diagnosis, main = "Mosaic Plot of Sex and Diagnosis")
+
+```
+```{r}
+cat("Higher proportion of male is associated with dagnosis compared to female as er the moosaic plot")
+```
+
+
+
+```{r}
+chi_sq_result <- chisq.test(table(hdisease_df$fbs, hdisease_df$diagnosis))
+print(chi_sq_result)  # Print the chi-square test result
+```
+```{r}
+cat(" The low p-value and other stats suggests there is a stong association between fbs and diagnosis as per the chi-square test result of fbs and diagnosis as there is a less random chance of occurrance. \n")
+```
+
+```{r}
+
+mosaicplot(hdisease_df$fbs ~ hdisease_df$diagnosis, main = "Mosaic Plot of fbs and Diagnosis")
+```
+```{r}
+cat("Higher proportion of fbs whichis lwss than or equal to 120mg/dl is associated with dagnosis  as per the mosaic plot")
+```
+
+```{r}
+chi_sq_exang <- chisq.test(table(hdisease_df$exang, hdisease_df$diagnosis))
+print(chi_sq_exang)  # Print the chi-square test result
+```
+```{r}
+cat(" The low p-value and other stats suggests there is a stong dependance between exercise-induced angina and the diagnosis of heart disease as per the chi-square test result of exang and diagnosis. \n")
+```
+```{r}
+mosaicplot(hdisease_df$exang ~ hdisease_df$diagnosis, main = "Mosaic Plot of exercise-induced angina and the diagnosis of heart disease ")
+```
+```{r}
+cat("Less proportion of people with exang needs with dagnosis  as per the mosaic plot\n")
+```
+```{r}
+chi_sq_result <- chisq.test(table(hdisease_df$cp, hdisease_df$diagnosis))
+print(chi_sq_result)  # Print the chi-square test result
+```
+
+```{r}
+cat(" The low p-value and other stats suggests there is a stong association between chest pain type and diagnosis as per the chi-square test result of type of chest pain and the diagnosis of heart . \n")
+```
+```{r}
+mosaicplot(hdisease_df$cp ~ hdisease_df$diagnosis, main = "Mosaic Plot of type of chest pain and the diagnosis of heart ")
+```
+
+```{r}
+cat("Higher proportion of chest type-4 is associated with dagnosis compared to types 3,2,1 as per the mosaic plot and the least type associated is type-1. Also it can beinferred that type-3 needs diagnosis and more occurrance when compared to type-2.\n")
+```
+```{r}
+chi_sq_ecg <- chisq.test(table(hdisease_df$restecg, hdisease_df$diagnosis))
+print(chi_sq_ecg)  #  the chi-square test result
+```
+```{r}
+cat(" The low p-value and other stats concludes that we can reject nullypothesis which implicates there is a stong statistical significant association whereas large chisquare value indicates practical significance between  resting electrocardiographic results and the diagnosis of heart disease . \n")
+```
+
+
+```{r}
+mosaicplot(hdisease_df$restecg ~ hdisease_df$diagnosis, main = "Mosaic Plot of resting electrocardiographic results and the diagnosis of heart disease ")
+```
+```{r}
+cat("Higher proportion of zeroeth level of restecg is associated with dagnosis compared to level-1,2 which are equally proportionate to one another as per the moosaic plot")
+```
+```{r}
+
+chi_sq_thal <- chisq.test(table(hdisease_df$thal, hdisease_df$diagnosis))
+print(chi_sq_thal)  #  the chi-square test result
+
+```
+```{r}
+cat(" The low p-value and other stats concludes that we can reject nullypothesis which implicates there is a stong statistical significant association  between  thal and the diagnosis of heart disease . \n")
+```
+```{r}
+mosaicplot(hdisease_df$thal ~ hdisease_df$diagnosis, main = "Mosaic Plot of thal and the diagnosis of heart disease ")
+```
+```{r}
+cat("Higher proportion of level-7 with heart disease are significanty associated with diagnosis of heart disease compared to level-3,6  as per the mosaic plot.")
+```
+```{r}
+chi_sq_slope <- chisq.test(table(hdisease_df$slope, hdisease_df$diagnosis))
+print(chi_sq_slope)  #  the chi-square test result
+
+```
+```{r}
+cat(" The low p-value and other stats concludes that we can reject null hypothesis which implicates there is a stong statistical significant association  between  slope and the diagnosis of heart disease . \n")
+```
+```{r}
+mosaicplot(hdisease_df$slope ~ hdisease_df$diagnosis, main = "Mosaic Plot of slope and the diagnosis of heart disease ")
+```
+```{r}
+cat("Higher proportion of level-2 of slope is associated with dagnosis compared to level-1,3  as per the mosaic plot.")
+```
+
+```{r}
+
+# Create Q-Q plot
+qqnorm(rnorm(hdisease_df$oldpeak))
+qqline(hdisease_df$oldpeak)
+
+```
+```{r}
+cat(" It is unclear from the above Q-Q plot about normal data distribution of old peak" )
+```
+#Reference obtained from google search of normal distribution test statistically
+
+```{r}
+# Perform Shapiro-Wilk test for normality
+shapiro.test(hdisease_df$oldpeak)
+
+```
+```{r}
+cat(" It is clear from the p-value of shapiro test that the oldpeak is not normally distributed.")
+```
+
+
+#oldpeak is continous variable
+```{r}
+cat("As we know t-test is robust, so t-test appropriate between oldpeak(continous) and diagnosis(categorical with two levels): ")
+oldpeak_heart_disease <- hdisease_df$oldpeak[hdisease_df$diagnosis == "Yes"]
+oldpeak_no_heart_disease <- hdisease_df$oldpeak[hdisease_df$diagnosis == "No"]
+
+# Perform t-test
+t_test_oldpeak <- t.test(hdisease_df$oldpeak, hdisease_df$diagnosis)
+
+# Print the results
+print(t_test_oldpeak)
+```
+
+```{r}
+cat("The sample estimates indicates that  individuals diagnosed with heart disease tend to have higher values of oldpeak compared to those without heart disease.The difference in means exist but a lower oneas per the t-value. With p-value it can be inferred that null hypothesis can  be rejected and concluded that there is a statistical difference exists  in oldpeak between individuals diagnosed with heart disease and those without.")
+```
+
+```{r}
+cat("As per the low pvalue and the significance code,it can be cncluded that the null hypothesis can be rejected and high statistical significance and difference can be observed between oldpeak  and diagnosis.")
+```
+
+
+
+```{r}
+# Create side-by-side boxplot
+boxplot(oldpeak ~ diagnosis, data = hdisease_df,
+        main = "Boxplot of oldpeak by Diagnosis",
+        xlab = "Diagnosis",
+        ylab = "oldpeak",
+        col = "lightblue",
+        border = "black")
+```
+```{r}
+cat("At first sight of this plot, it can be inferred that category- yes is predominant and both the categories has a smaller spread.There seems to be outliers in both categories of diagnosis ~ oldpeak but outliers of yes category are samll in numberwhen compared to the other one. For category-yes the median is not exactly in between Q1 and Q3 but slightly closer to the top qaurtile which is slightly skewd towards uppervalues whereas in the category-no median is almostcloser and overlapping with bottom qaurtile which says data is skewed towards lower values.Also it can be inferred that there is no homogeneity in variances of groups. ")
+```
+
+
+```{r}
+# Create side-by-side boxplot
+boxplot(age ~ diagnosis, data = hdisease_df,
+        main = "Boxplot of Age by Diagnosis",
+        xlab = "Diagnosis",
+        ylab = "Age",
+        col = "lightblue",
+        border = "black")
+```
+```{r}
+cat(" The outliers in category yes of diagnosis are clearly visible but a few exists whereas the other category has none. Also both categories are skewed towards upper values. Outliers are low when compared to the majority of data. The spread of both is neither small nor large. The median of category-yes is higher than the other one which  concludes that there is a difference in central tendency of both categories - specifically category-yes has higher values.  ")
+```
+
+
+```{r}
+anova_age <- aov(age ~ diagnosis, data = hdisease_df)
+summary(anova_age)
+
+```
+```{r}
+cat(" The p-value, significance code  is small here,   concludes that the null hypothesis can be rejected which in turn suggests that there is statistically significant difference between the age and diagnosis. ")
+```
+
+```{r}
+anova_trestbps <- aov(trestbps ~ diagnosis, data = hdisease_df)
+summary(anova_trestbps)
+
+```
+
+
+```{r}
+cat(" The p-value, significance code  is small here,   concludes that the null hypothesis can be rejected which in turn suggests that there is statistical difference between the trestbps and diagnosis. ")
+```
+
+```{r}
+# Create side-by-side boxplot
+boxplot(trestbps ~ diagnosis, data = hdisease_df,
+        main = "Boxplot of trestbps by Diagnosis",
+        xlab = "Diagnosis",
+        ylab = "trestbps",
+        col = "lightblue",
+        border = "black")
+```
+```{r}
+cat(" The central tendency of both categories is almost same. The outliers in both categories are low with respect to the majority of the data.People with heart disease are more in number comparatively and with trestbps greater than 12o are highly associated with diagnosis. ")
+```
+```{r}
+# Subset the data for individuals with and without heart disease
+trestbps_heart_disease <- hdisease_df$trestbps[hdisease_df$diagnosis == "Yes"]
+trestbps_no_heart_disease <- hdisease_df$trestbps[hdisease_df$diagnosis == "No"]
+
+# Perform t-test
+t_test_trestbps <- t.test(trestbps_heart_disease, trestbps_no_heart_disease)
+
+# Print the results
+print(t_test_trestbps)
+
+```
+```{r}
+cat(" The p-value is 0.001485 is less than the  significance level of 0.05 suggesting that null hypothesis can be rejected.The sample estimates show that the mean resting blood pressure for individuals diagnosed with heart disease is higher than those without the heart disease.Hence,  there is a statistically significant difference in resting blood pressure between individuals with and without heart disease.")
+```
+
+```{r}
+anova_chol <- aov(chol ~ diagnosis, data = hdisease_df)
+summary(anova_chol)
+
+```
+```{r}
+
+cat("The p-value, significance code  is small here,   concludes that the null hypothesis can be rejected which in turn suggests that there is statistical difference between the chol and diagnosis ")
+
+```
+
+```{r}
+# Create side-by-side boxplot
+boxplot(chol ~ diagnosis, data = hdisease_df,
+        main = "Boxplot of chol by Diagnosis",
+        xlab = "Diagnosis",
+        ylab = "chol",
+        col = "lightblue",
+        border = "black")
+```
+```{r}
+cat("The spread of the category-yes is wider than the category-no. The data in category-yes is skewed towards upper values.Apart fromthis whiskers in category-yes indicate that the majority of data is spread in the upper range. This indicates that thepeople with high cholesterol level are associated with diagnosis of heart disease. ")
+```
+
+
+```{r}
+anova_thalach <- aov(thalach ~ diagnosis, data = hdisease_df)
+summary(anova_thalach)
+```
+```{r}
+cat("The p-value is small here, F-value is large concludes that the null hypothesis canbe rejected which  suggests that there is statistical difference between the thalach and diagnosis ")
+```
+
+```{r}
+# Create side-by-side boxplot
+boxplot(thalach ~ diagnosis, data = hdisease_df,
+        main = "Boxplot of thalach by Diagnosis",
+        xlab = "Diagnosis",
+        ylab = "thalach",
+        col = "lightblue",
+        border = "black")
+
+```
+
+```{r}
+cat("Comparatively, the spread of category-no is wide. Also it can be inferred that smaller spread of data exists beyond the middle 50% of the data in both categories and the central tendency of category-no is higher than the category-yes.Negligible number of outliers exist in both categories.")
+```
+```{r}
+library(car)
+# Create Q-Q plot
+qqnorm(rnorm(hdisease_df$cp))
+
+
+
+
+```
+```{r}
+kruskal.test(cp ~ diagnosis, data = hdisease_df)
+```
+
+```{r}
+library(car)
+# Create Q-Q plot
+qqnorm(rnorm(hdisease_df$age))
+qqline(hdisease_df$age)
+
+
+```
+```{r}
+cat("It can be inferred that all the plots of above variables are distributed along the diagonal line except oldpeak suggesting normal distribution of them. ")
+```
+```{r}
+# Create Q-Q plot
+qqnorm(rnorm(hdisease_df$trestbps))
+qqline(hdisease_df$trestbps)
+
+```
+
+```{r}
+# Create Q-Q plot
+qqnorm(rnorm(hdisease_df$chol))
+qqline(hdisease_df$chol)
+
+```
+```{r}
+# Create Q-Q plot
+qqnorm(rnorm(hdisease_df$thalach))
+qqline(hdisease_df$thalach)
+
+```
+#Reference: lecture ppt and R documentation
+```{r}
+# Create Q-Q plot
+qqnorm(rnorm(hdisease_df$oldpeak))
+qqline(hdisease_df$oldpeak)
+```
+```{r}
+
+cat(" From the kruskal test results - df value indicates there are 2 groups - with and without heart disease. P-value indicates that null hypothesis can be rejected and can be concluded that there are statistically significant differences in the distribution of chest pain types between individuals with and without heart disease. ")
+
+
+```
+#Referrred google - "tests for homogeneity of variance"
+```{r}
+library(car)
+
+leveneTest(age ~ diagnosis, data = hdisease_df)
+leveneTest(trestbps ~ diagnosis, data = hdisease_df)
+leveneTest(chol ~ diagnosis, data = hdisease_df)
+leveneTest(thalach ~ diagnosis, data = hdisease_df)
+leveneTest(oldpeak ~ diagnosis, data = hdisease_df)
+```
+```{r}
+cat(" In the above results, p-value is less than the chosen significance level (e.g., 0.05), we reject the null hypothesis and conclude that there are unequal variances across groups in all the above five results as the interpretation of Levene's Test results depends on the p-value.")
+```
+```{r}
+cat(" As normality and homogeneity of variances is failed, it suggests us to go for kruskal wallis test. As diagnosis, response variable is  categorical, scatter plot and pearon correlation cannot be opted.")
+```
+#Referred R documentation
+
+```{r}
+kruskal.test(age ~ diagnosis, data = hdisease_df)
+kruskal.test(trestbps ~ diagnosis, data = hdisease_df)
+kruskal.test(chol ~ diagnosis, data = hdisease_df)
+kruskal.test(thalach ~ diagnosis, data = hdisease_df)
+kruskal.test(oldpeak ~ diagnosis, data = hdisease_df)
+
+```
+```{r}
+cat("For  all the above tested variables , it can be inferred that there are statistically significant differences between the diagnosis groups, indicating that these variables may be associated with the diagnosis of heart disease.")
+```
+
+
+
+
+
+
+
+
+
+
+
+
